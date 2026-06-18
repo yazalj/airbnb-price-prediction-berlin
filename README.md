@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository contains our final project for the SoSe 2026 Machine Learning course.
+This repository contains our final project for the B.Inf.1236 Machine Learning course.
 
 The goal of the project is to build a machine learning model that predicts the nightly price of Airbnb listings. We use data from Inside Airbnb and focus on the city of Berlin.
 
