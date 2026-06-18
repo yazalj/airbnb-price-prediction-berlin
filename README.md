@@ -212,7 +212,7 @@ The project deliverables are:
 1. Clone the repository.
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yazalj/airbnb-price-prediction-berlin.git
 ```
 
 2. Install the required Python packages.
