@@ -251,15 +251,3 @@ The repository is organized so that all group members can use the same folder st
 
 - Inside Airbnb. *About Inside Airbnb*. Available at: https://insideairbnb.com/about/  
   Used for background information about the Inside Airbnb project and its data collection purpose.
-
-- Scikit-learn Documentation. *User Guide*. Available at: https://scikit-learn.org/stable/user_guide.html  
-  Used as a reference for machine learning models, preprocessing methods, pipelines, and evaluation metrics.
-
-- Pandas Documentation. *User Guide*. Available at: https://pandas.pydata.org/docs/user_guide/  
-  Used as a reference for data loading, cleaning, manipulation, and analysis.
-
-- Matplotlib Documentation. *User Guide*. Available at: https://matplotlib.org/stable/users/index.html  
-  Used as a reference for data visualization and plotting.
-
-- SoSe 2026 Machine Learning Course. *Airbnb Price Prediction Project Description*.  
-  Used as the official project description and deliverable guideline.
