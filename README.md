@@ -16,6 +16,16 @@ The project includes:
 - result interpretation
 - intermediate and final presentations
 
+## Group Members
+
+Add the group member names here:
+
+| Name | GitHub Username ||
+|---|---|---|
+| Yazan Aljerro | yazalj ||
+| Zeynep Sude Kırlı | zeyneps13 ||
+| Natasha Machate |  ||
+
 ## Research Question
 
 Can we predict Airbnb nightly listing prices in Berlin using machine learning models based on listing characteristics, location information, and textual descriptions?
@@ -178,6 +188,16 @@ airbnb-price-prediction-berlin/
 ## Group Responsibilities
 
 The work is divided into three main parts.
+
+### Responsibility Assignment
+
+Add the responsible group member for each part here:
+
+| Part | Main Responsibility | Responsible Group Member |
+|---|---|---|
+| Part 1 | Data loading, cleaning, and EDA | Zeynep Sude Kırlı |
+| Part 2 | Feature engineering |  |
+| Part 3 | Modeling and evaluation |  |
 
 ### Part 1: Data Loading, Cleaning, and EDA
 
