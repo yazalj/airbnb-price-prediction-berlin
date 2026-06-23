@@ -20,11 +20,11 @@ The project includes:
 
 Add the group member names here:
 
-| Name | GitHub Username ||
+| Name | GitHub Username | Notes |
 |---|---|---|
-| Yazan Aljerro | yazalj ||
-| Zeynep Sude Kırlı | zeyneps13 ||
-| Natasha Machate |  ||
+| Yazan Aljerro | yazalj |  |
+| Zeynep Sude Kırlı | zeyneps13 |  |
+| Natasha Machate |  |  |
 
 ## Research Question
 
@@ -185,6 +185,10 @@ airbnb-price-prediction-berlin/
 └── .gitignore
 ```
 
+The main workflow is currently implemented in task-based notebooks. The `src/` folder is reserved for reusable Python functions that may be moved out of the notebooks later as the project grows.
+
+The `reports/` folder is reserved for generated figures and presentation files. It may stay mostly empty during the early stages of the project and will be filled later when the intermediate and final presentations are prepared.
+
 ## Group Responsibilities
 
 The work is divided into three main parts.
@@ -198,6 +202,7 @@ Add the responsible group member for each part here:
 | Part 1 | Data loading, cleaning, and EDA | Zeynep Sude Kırlı |
 | Part 2 | Feature engineering |  |
 | Part 3 | Modeling and evaluation |  |
+| Shared | Intermediate presentation, final presentation, repository cleanup, and discussion | All group members |
 
 ### Part 1: Data Loading, Cleaning, and EDA
 
@@ -210,9 +215,12 @@ Responsibilities:
 - create initial visualizations
 - save the cleaned dataset locally
 
-Main files:
+Main file:
 
 - `notebooks/01_eda.ipynb`
+
+Possible reusable scripts for later refactoring:
+
 - `src/data_loading.py`
 - `src/cleaning.py`
 
@@ -226,9 +234,12 @@ Responsibilities:
 - create text features from names and descriptions
 - prepare the final feature matrix for modeling
 
-Main files:
+Main file:
 
 - `notebooks/02_feature_engineering.ipynb`
+
+Possible reusable scripts for later refactoring:
+
 - `src/features_tabular.py`
 - `src/features_spatial.py`
 - `src/features_text.py`
@@ -247,6 +258,9 @@ Main files:
 
 - `notebooks/03_modeling.ipynb`
 - `notebooks/04_final_results.ipynb`
+
+Possible reusable scripts for later refactoring:
+
 - `src/models.py`
 - `src/evaluate.py`
 
