@@ -200,8 +200,8 @@ Add the responsible group member for each part here:
 | Part | Main Responsibility | Responsible Group Member |
 |---|---|---|
 | Part 1 | Data loading, cleaning, and EDA | Zeynep Sude Kırlı |
-| Part 2 | Feature engineering |  |
-| Part 3 | Modeling and evaluation |  |
+| Part 2 | Feature engineering | Natasha Machate |
+| Part 3 | Modeling and evaluation | Yazan Aljerro |
 | Shared | Intermediate presentation, final presentation, repository cleanup, and discussion | All group members |
 
 ### Part 1: Data Loading, Cleaning, and EDA
