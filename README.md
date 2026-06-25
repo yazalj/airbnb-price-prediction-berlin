@@ -24,7 +24,7 @@ Add the group member names here:
 |---|---|---|
 | Yazan Aljerro | yazalj |  |
 | Zeynep Sude Kırlı | zeyneps13 |  |
-| Natasha Machate |  |  |
+| Natasha Machate | KitCatasha |  |
 
 ## Research Question
 
