@@ -4,21 +4,18 @@
 
 This repository contains our final project for the B.Inf.1236 Machine Learning course, SoSe 2026.
 
-The goal of the project is to build and evaluate machine learning models that predict the nightly price of Airbnb listings in Berlin. We use data from Inside Airbnb and combine different types of information, including listing characteristics, location data, and textual descriptions.
+The goal is to build and evaluate machine-learning models that predict the advertised nightly price of Airbnb listings in Berlin. The project uses data from Inside Airbnb and evaluates listing-level tabular features, spatial information, and simple features derived from listing text.
 
-The project includes:
+The implemented workflow includes:
 
-- data loading and cleaning
-- exploratory data analysis
-- feature engineering
-- model training
-- model evaluation
-- result interpretation
-- intermediate and final presentations
+- data loading, cleaning, and exploratory data analysis
+- feature engineering for tabular, spatial, and text-derived information
+- train/test splitting and training-only cross-validation
+- baseline, linear, tree-ensemble, and PyTorch neural-network models
+- model comparison, ablation studies, error analysis, and uncertainty estimates
+- a concise final-results notebook for presentation and reporting
 
 ## Group Members
-
-Add the group member names here:
 
 | Name | GitHub Username | Notes |
 |---|---|---|
@@ -28,15 +25,15 @@ Add the group member names here:
 
 ## Research Question
 
-Can we predict Airbnb nightly listing prices in Berlin using machine learning models based on listing characteristics, location information, and textual descriptions?
+How accurately can advertised Airbnb nightly prices in Berlin be predicted from listing characteristics and location information, and do the available simple text-derived features provide additional predictive value?
 
 ## Dataset
 
 The data comes from [Inside Airbnb](https://insideairbnb.com/get-the-data/), an open-data platform that provides Airbnb datasets for different cities.
 
-For this project, we use the Berlin dataset.
+For this project, we use the Berlin dataset. The processed data and the reported notebook results are based on the Berlin snapshot scraped on 23–24 September 2025. Running the workflow with a newer snapshot may produce different row counts, feature distributions, and model results.
 
-The required raw data files are:
+The raw files loaded by `notebooks/01_eda.ipynb` are:
 
 ```text
 listings.csv
@@ -54,19 +51,21 @@ calendar.csv.gz
 reviews.csv.gz
 ```
 
-The notebook is written to support both `.csv` and `.csv.gz` versions of the main files.
+The first notebook supports both `.csv` and `.csv.gz` versions of the listings, calendar, and reviews files. The current predictive table is built from the detailed listings data. The neighbourhood GeoJSON is used for spatial visualizations; the separate calendar and reviews tables are loaded for dataset inspection but are not merged into the final modeling table.
+
+Image data is not used in this project.
 
 ## Data Setup
 
-The raw data files are not included in this repository because they are large and publicly available online.
+The raw and processed data files are not included in the repository because they are large and publicly available.
 
-Each group member should download the Berlin dataset manually from Inside Airbnb and place the files inside:
+Each group member should download the Berlin files from Inside Airbnb and place them inside:
 
 ```text
 data/raw/
 ```
 
-On our local setup, the folder should look like this:
+Expected local structure:
 
 ```text
 data/raw/
@@ -77,7 +76,7 @@ data/raw/
 └── neighbourhoods.geojson
 ```
 
-Compressed versions are also acceptable:
+Compressed versions of the three main CSV files are also accepted:
 
 ```text
 data/raw/
@@ -88,66 +87,108 @@ data/raw/
 └── neighbourhoods.geojson
 ```
 
-The first notebook creates a cleaned dataset locally:
+The notebooks create two local processed files:
 
 ```text
 data/processed/listings_cleaned.csv
+data/processed/modeling_dataset.csv
 ```
 
-This processed file is not tracked by Git and should not be uploaded to GitHub. It can be reproduced by running the notebook.
+- `01_eda.ipynb` creates `listings_cleaned.csv`.
+- `02_feature_engineering.ipynb` creates `modeling_dataset.csv`.
+
+Both files are ignored by Git and can be reproduced by running the notebooks in order.
 
 ## Modalities Used
 
-The project uses multiple data modalities.
+The project evaluates three data modalities.
 
 ### 1. Tabular data
 
-Listing characteristics such as:
+Examples include:
 
-- room type
-- accommodates
-- bedrooms
-- bathrooms
-- beds
-- minimum nights
-- availability
-- number of reviews
-- review scores
+- room type and accommodation capacity
+- bedrooms, beds, and parsed bathroom count
+- minimum and maximum nights
+- availability windows
+- review counts and review scores
+- host and booking indicators
 
 ### 2. Spatial data
 
-Location-related information such as:
+The spatial representation includes:
 
-- latitude
-- longitude
-- neighbourhood
-- distance to Berlin city center
+- latitude and longitude
+- Berlin borough one-hot indicators
+- Haversine distance to the Berlin city centre
 
-### 3. Text data
+### 3. Text-derived data
 
-Textual information from listing names and descriptions, processed using simple text-based features such as TF-IDF.
+The current text representation uses simple numerical summaries from the listing name, description, and neighbourhood overview:
 
-Image data may be considered as a possible future extension, but it is not part of the first project version.
+- character length
+- word count
 
-## Planned Models
+TF-IDF, pretrained language embeddings, and image features were not implemented. The text ablation showed that these six simple text summaries did not improve the selected Random Forest, so the final selected model uses tabular and spatial features without them.
 
-We plan to compare several machine learning models:
+## Models Evaluated
 
-- baseline median price model
-- Linear Regression / Ridge Regression
-- Random Forest Regressor
-- Gradient Boosting Regressor
-- combined model using tabular, spatial, and text features
+The implemented comparison includes:
+
+- median-price baseline
+- mean-price baseline
+- Linear Regression
+- Ridge Regression with cross-validated regularization
+- Random Forest Regressor with a compact hyperparameter search
+- Gradient Boosting Regressor with structure and loss-function comparisons
+- a PyTorch multilayer perceptron with train-only standardization, a log-transformed target, AdamW, dropout, Huber loss, and early stopping
+
+The final candidate is selected by the lowest training cross-validated MAE rather than by the test-set score.
 
 ## Evaluation Metrics
 
-The models will be evaluated using:
+The primary metric is:
 
-- **MAE**: Mean Absolute Error
+- **MAE**: Mean Absolute Error in euros per night
+
+Supporting metrics are:
+
 - **RMSE**: Root Mean Squared Error
 - **R²**: Coefficient of determination
+- median absolute error
+- proportions of predictions within €10, €25, and €50 of the advertised price
 
-MAE is especially useful because it can be interpreted as the average prediction error in the nightly listing price.
+MAE is the primary metric because it measures the average absolute euro error directly. RMSE is also reported because it penalizes large mistakes more strongly.
+
+### Validation strategy
+
+- fixed 80/20 train/test split
+- target-decile stratification to preserve the skewed price distribution
+- three-fold cross-validation on the training set for model and hyperparameter selection
+- five predetermined repeated holdout splits as a stability analysis
+- bootstrap confidence intervals for MAE and RMSE on the fixed test predictions
+
+### Main result
+
+In the latest executed `03_modeling.ipynb`, the training-selected final model is a Random Forest trained on `log1p(price)` using tabular and full spatial features but excluding the six simple text summaries.
+
+Its fixed holdout performance is approximately:
+
+- **MAE:** €29.4 per night
+- **RMSE:** €49.1 per night
+- **R²:** 0.65
+- **Within €25:** 64%
+- **Within €50:** 85%
+
+The raw-target Random Forest has slightly better RMSE and R², while the log-target model has better MAE. The final choice therefore reflects the declared priority given to typical absolute euro error rather than universal superiority on every metric.
+
+### Important limitations
+
+- Some Part 1 and Part 2 preprocessing was performed before the train/test split. The 99th-percentile price threshold, several imputation values, and categorical encoding therefore used information from the full dataset and may introduce a small optimistic bias.
+- The most expensive 1% of listings were removed during cleaning, so the reported performance does not apply to that excluded upper tail.
+- The current text modality measures text quantity, not semantic content.
+- The data comes from one Berlin snapshot, and random splits do not directly test generalization to future market conditions, other cities, or completely unseen hosts.
+- The analysis is predictive and does not support causal claims about why a feature is associated with price.
 
 ## Repository Structure
 
@@ -166,28 +207,12 @@ airbnb-price-prediction-berlin/
 │   ├── 03_modeling.ipynb
 │   └── 04_final_results.ipynb
 │
-├── src/
-│   ├── data_loading.py
-│   ├── cleaning.py
-│   ├── features_tabular.py
-│   ├── features_text.py
-│   ├── features_spatial.py
-│   ├── models.py
-│   └── evaluate.py
-│
-├── reports/
-│   ├── figures/
-│   ├── intermediate_presentation/
-│   └── final_presentation/
-│
 ├── README.md
 ├── requirements.txt
 └── .gitignore
 ```
 
-The main workflow is currently implemented in task-based notebooks. The `src/` folder is reserved for reusable Python functions that may be moved out of the notebooks later as the project grows.
-
-The `reports/` folder is reserved for generated figures and presentation files. It may stay mostly empty during the early stages of the project and will be filled later when the intermediate and final presentations are prepared.
+The workflow is separated into four task-based notebooks. Generated datasets remain local under `data/processed/`, while the executed modeling and final-results notebooks retain the principal tables and figures needed to inspect the results.
 
 ## Group Responsibilities
 
@@ -195,107 +220,91 @@ The work is divided into three main parts.
 
 ### Responsibility Assignment
 
-Add the responsible group member for each part here:
-
 | Part | Main Responsibility | Responsible Group Member |
 |---|---|---|
 | Part 1 | Data loading, cleaning, and EDA | Zeynep Sude Kırlı |
 | Part 2 | Feature engineering | Natasha Machate |
-| Part 3 | Modeling and evaluation | Yazan Aljerro |
-| Shared | Intermediate presentation, final presentation, repository cleanup, and discussion | All group members |
+| Part 3 | Modeling, evaluation, and final-results summary | Yazan Aljerro |
+| Shared | Presentations, repository cleanup, and final discussion | All group members |
 
 ### Part 1: Data Loading, Cleaning, and EDA
 
 Responsibilities:
 
-- download and load the Berlin Airbnb data
-- clean the target price variable
-- handle missing values and outliers
-- perform exploratory data analysis
-- create initial visualizations
-- save the cleaned dataset locally
+- load the Berlin Airbnb files
+- clean and validate the target price
+- handle selected missing values and create missingness indicators
+- remove non-positive and upper-tail prices according to the documented rule
+- perform exploratory data analysis and spatial visualizations
+- save the cleaned listing-level dataset locally
 
 Main file:
 
 - `notebooks/01_eda.ipynb`
 
-Possible reusable scripts for later refactoring:
-
-- `src/data_loading.py`
-- `src/cleaning.py`
-
 ### Part 2: Feature Engineering
 
 Responsibilities:
 
-- create tabular features
-- encode categorical variables
-- create spatial features
-- create text features from names and descriptions
-- prepare the final feature matrix for modeling
+- select listing-level predictors
+- create the distance-to-centre spatial feature
+- derive simple text-length and word-count features
+- encode categorical and binary variables
+- prepare and save the numeric modeling table
 
 Main file:
 
 - `notebooks/02_feature_engineering.ipynb`
 
-Possible reusable scripts for later refactoring:
-
-- `src/features_tabular.py`
-- `src/features_spatial.py`
-- `src/features_text.py`
-
 ### Part 3: Modeling and Evaluation
 
 Responsibilities:
 
-- build a baseline model
-- train machine learning models
-- compare model performance
-- create evaluation tables and plots
-- interpret the model results
+- audit the modeling table and prevent identifier leakage
+- create train/test and cross-validation splits
+- train baselines, linear models, tree ensembles, and a PyTorch MLP
+- tune selected hyperparameters on training data
+- compare raw-price and log-price targets
+- perform spatial and text ablations
+- assess split stability, subgroup errors, feature importance, and bootstrap uncertainty
+- summarize the final results and limitations
 
 Main files:
 
 - `notebooks/03_modeling.ipynb`
 - `notebooks/04_final_results.ipynb`
 
-Possible reusable scripts for later refactoring:
-
-- `src/models.py`
-- `src/evaluate.py`
-
-All group members will contribute to the intermediate presentation, final presentation, repository cleanup, and final discussion.
+All group members contribute to the presentations, repository cleanup, and final discussion.
 
 ## Project Deliverables
 
-The project deliverables are:
-
 ### 1. Intermediate Presentation
 
-The intermediate presentation should include:
+The intermediate presentation covers:
 
 - chosen city and dataset
 - selected data modalities
 - initial dataset overview
-- first cleaning and EDA results
-- planned feature engineering
-- planned models
-- problems encountered and next steps
+- cleaning and EDA results
+- planned feature engineering and models
+- encountered problems and next steps
 
 ### 2. Final Presentation
 
-The final presentation should include:
+The final presentation should briefly communicate:
 
-- project objective
-- data preprocessing
-- feature engineering
-- model descriptions
-- evaluation results
-- discussion and conclusion
+- project objective and Berlin dataset
+- preprocessing and feature engineering
+- model descriptions and validation strategy
+- principal evaluation results
+- modality and model trade-offs
+- limitations and conclusions
+
+`notebooks/04_final_results.ipynb` is the concise presentation-oriented summary; the complete experiments and diagnostics remain in `notebooks/03_modeling.ipynb`.
 
 ### 3. Code Repository
 
-The repository should be organized and reproducible. The code should be separated by task and should not be placed entirely in one notebook.
+The repository separates data preparation, feature engineering, modeling, and final reporting into different notebooks. Raw and generated data are excluded from version control and can be reproduced locally.
 
 ## How to Run the Project Locally
 
@@ -337,65 +346,27 @@ python -m ipykernel install --user --name airbnb-ml-project --display-name "Pyth
 
 ### 5. Open the project in VS Code
 
-Open the full project folder:
+Open the full repository folder:
 
 ```text
 airbnb-price-prediction-berlin/
 ```
 
-Do not open only the `notebooks/` folder, because the notebooks use paths relative to the project root.
+Do not open only the `notebooks/` folder, because the workflow depends on the shared repository structure.
 
 ### 6. Select the correct notebook kernel
 
-In VS Code, open:
-
-```text
-notebooks/01_eda.ipynb
-```
-
-Then click **Select Kernel** and choose either:
+Open a notebook, click **Select Kernel**, and choose either:
 
 ```text
 Python (Airbnb ML Project)
 ```
 
-or the local virtual environment:
-
-```text
-.venv
-```
-
-If the kernel does not appear immediately, click the refresh icon in the kernel selection menu.
+or the local `.venv` environment. If it does not appear immediately, refresh the kernel list.
 
 ### 7. Add the raw data
 
-Download the Berlin dataset from Inside Airbnb and place the files in:
-
-```text
-data/raw/
-```
-
-The expected local structure is:
-
-```text
-data/raw/
-├── listings.csv
-├── calendar.csv
-├── reviews.csv
-├── neighbourhoods.csv
-└── neighbourhoods.geojson
-```
-
-or, if using compressed files:
-
-```text
-data/raw/
-├── listings.csv.gz
-├── calendar.csv.gz
-├── reviews.csv.gz
-├── neighbourhoods.csv
-└── neighbourhoods.geojson
-```
+Download the Berlin files from Inside Airbnb and place them in `data/raw/` using one of the structures shown in the Dataset section.
 
 ### 8. Run the notebooks in order
 
@@ -406,13 +377,16 @@ notebooks/03_modeling.ipynb
 notebooks/04_final_results.ipynb
 ```
 
-The first notebook creates:
+The generated files are:
 
 ```text
-data/processed/listings_cleaned.csv
+01_eda.ipynb                 -> data/processed/listings_cleaned.csv
+02_feature_engineering.ipynb -> data/processed/modeling_dataset.csv
 ```
 
-This file is generated locally and should not be uploaded to GitHub.
+`03_modeling.ipynb` performs the full model fitting and evaluation. It includes a CPU-compatible PyTorch MLP and repeated experiments, so it takes longer than the first two notebooks. A GPU is not required by the current implementation.
+
+`04_final_results.ipynb` is a concise reporting notebook based on the results of Notebook 03 and should be updated whenever the modeling workflow or its outputs change.
 
 ## Notes
 
@@ -427,9 +401,10 @@ data/raw/reviews.csv
 data/raw/neighbourhoods.csv
 data/raw/neighbourhoods.geojson
 data/processed/listings_cleaned.csv
+data/processed/modeling_dataset.csv
 ```
 
-The compressed raw files should also stay local if they are used:
+The compressed raw files should also stay local if used:
 
 ```text
 data/raw/listings.csv.gz
@@ -437,65 +412,61 @@ data/raw/calendar.csv.gz
 data/raw/reviews.csv.gz
 ```
 
-Only code, notebooks, documentation, figures, and presentation files should be committed to GitHub.
+Only code, notebooks, documentation, and presentation material should be committed to GitHub.
 
-The repository is organized so that all group members can use the same folder structure and reproduce the data processing steps on their own computers.
+Because the dependency versions in `requirements.txt` are not pinned, very small numerical differences may occur across Python, NumPy, scikit-learn, or PyTorch versions. The qualitative conclusions should be checked again after any environment or data change.
 
 ## Troubleshooting
 
-### The notebook cannot find the raw data files
+### A notebook cannot find the data files
 
-Make sure the project is opened from the root folder, not from the `notebooks/` folder.
-
-Correct:
-
-```text
-airbnb-price-prediction-berlin/
-```
-
-Incorrect:
-
-```text
-airbnb-price-prediction-berlin/notebooks/
-```
-
-Also make sure the files are placed in:
-
-```text
-data/raw/
-```
+Open the complete repository folder and confirm that the files are placed under `data/raw/` or `data/processed/` as expected. Run the notebooks in numerical order so that each generated input exists before the next notebook starts.
 
 ### The Jupyter kernel does not appear in VS Code
 
-First make sure the virtual environment is activated and the kernel was registered:
+Activate the virtual environment and register it again:
 
 ```bash
 python -m ipykernel install --user --name airbnb-ml-project --display-name "Python (Airbnb ML Project)"
 ```
 
-Then in VS Code, click **Select Kernel** and choose the `.venv` environment. If it does not appear, click the refresh icon in the kernel selection window.
+Then refresh the kernel selection menu and choose the `.venv` environment.
 
-### The notebook starts inside the `notebooks/` directory
+### PyTorch is not installed
 
-The notebook includes a small path fix so that it changes the working directory back to the project root when needed. This helps the notebook find `data/raw/` and save files to `data/processed/`.
+With the project environment activated, run:
+
+```bash
+pip install torch
+```
+
+Then restart the notebook kernel.
+
+### Results differ slightly from the committed notebook outputs
+
+Confirm that the same Berlin data snapshot is being used. Minor differences can also arise from library versions and floating-point behavior. Larger differences usually indicate a different dataset snapshot, changed preprocessing, or notebooks run out of order.
 
 ## Sources
 
 - Inside Airbnb. *Get the Data*.  
   Available at: https://insideairbnb.com/get-the-data/  
-  Used as the source for the Berlin Airbnb datasets, including listings, calendar, reviews, and neighbourhood data.
+  Source of the Berlin listings, calendar, reviews, and neighbourhood files.
 
 - Inside Airbnb. *About Inside Airbnb*.  
   Available at: https://insideairbnb.com/about/  
-  Used for background information about the Inside Airbnb project and its data collection purpose.
+  Background information about the project and data collection.
 
 - Pandas Documentation. *User Guide*.  
   Available at: https://pandas.pydata.org/docs/user_guide/  
-  Used for data loading, cleaning, and manipulation.
+  Used for data loading, cleaning, feature preparation, and result tables.
+
+- NumPy Documentation.  
+  Available at: https://numpy.org/doc/stable/  
+  Used for numerical operations and reproducible array processing.
 
 - Matplotlib Documentation.  
   Available at: https://matplotlib.org/stable/users/index.html  
-  Used for creating visualizations.
+  Used for visualizations.
 
 - Seaborn Documentation.  
   Available at: https://seaborn.pydata.org/  
@@ -503,8 +474,12 @@ The notebook includes a small path fix so that it changes the working directory 
 
 - GeoPandas Documentation.  
   Available at: https://geopandas.org/en/stable/  
-  Used for loading and working with neighbourhood GeoJSON data.
+  Used for neighbourhood GeoJSON data and spatial plots.
 
 - Scikit-learn Documentation. *User Guide*.  
   Available at: https://scikit-learn.org/stable/user_guide.html  
-  Used for feature engineering, machine learning models, and evaluation metrics.
+  Used for preprocessing pipelines, regression models, cross-validation, metrics, ablations, and permutation importance.
+
+- PyTorch Documentation.  
+  Available at: https://pytorch.org/docs/stable/  
+  Used for the multilayer perceptron benchmark.
