@@ -10,9 +10,9 @@ The implemented workflow includes:
 
 - data loading, cleaning, and exploratory data analysis
 - feature engineering for tabular, spatial, and text-derived information
-- train/test splitting and training-only cross-validation
+- train/test splitting, training-only imputation, and training-only cross-validation
 - baseline, linear, tree-ensemble, and PyTorch neural-network models
-- model comparison, ablation studies, error analysis, and uncertainty estimates
+- model comparison, ablation studies, random-split and unseen-host stress tests, error analysis, and uncertainty estimates
 - a concise final-results notebook for presentation and reporting
 
 ## Group Members
@@ -87,17 +87,19 @@ data/raw/
 └── neighbourhoods.geojson
 ```
 
-The notebooks create two local processed files:
+The notebooks create three local generated files:
 
 ```text
 data/processed/listings_cleaned.csv
 data/processed/modeling_dataset.csv
+data/processed/final_results.json
 ```
 
 - `01_eda.ipynb` creates `listings_cleaned.csv`.
 - `02_feature_engineering.ipynb` creates `modeling_dataset.csv`.
+- `03_modeling.ipynb` creates `final_results.json`, which keeps Notebook 04 synchronized with the executed modeling results.
 
-Both files are ignored by Git and can be reproduced by running the notebooks in order.
+All three files are ignored by Git and can be reproduced by running the notebooks in order.
 
 ## Modalities Used
 
@@ -141,7 +143,7 @@ The implemented comparison includes:
 - Ridge Regression with cross-validated regularization
 - Random Forest Regressor with a compact hyperparameter search
 - Gradient Boosting Regressor with structure and loss-function comparisons
-- a PyTorch multilayer perceptron with train-only standardization, a log-transformed target, AdamW, dropout, Huber loss, and early stopping
+- a PyTorch multilayer perceptron with train-only imputation and standardization, a log-transformed target, AdamW, dropout, Huber loss, and early stopping
 
 The final candidate is selected by the lowest training cross-validated MAE rather than by the test-set score.
 
@@ -162,32 +164,38 @@ MAE is the primary metric because it measures the average absolute euro error di
 
 ### Validation strategy
 
-- fixed 80/20 train/test split
+- fixed 80/20 listing-level train/test split
 - target-decile stratification to preserve the skewed price distribution
+- reconstruction of originally missing numeric values followed by median imputation fitted inside each training split or fold
 - three-fold cross-validation on the training set for model and hyperparameter selection
-- five predetermined repeated holdout splits as a stability analysis
-- bootstrap confidence intervals for MAE and RMSE on the fixed test predictions
+- five predetermined repeated listing-level holdout splits as a stability analysis
+- five group-based stress-test splits with zero host overlap
+- listing-level and host-cluster bootstrap confidence intervals for MAE and RMSE on the fixed test predictions
 
 ### Main result
 
-In the latest executed `03_modeling.ipynb`, the training-selected final model is a Random Forest trained on `log1p(price)` using tabular and full spatial features but excluding the six simple text summaries.
+In the latest fully executed `03_modeling.ipynb`, the training-selected final model is a Random Forest trained on `log1p(price)` using tabular and full spatial features while excluding the six simple text summaries.
 
-Its fixed holdout performance is approximately:
+Its fixed holdout performance is:
 
-- **MAE:** €29.4 per night
-- **RMSE:** €49.1 per night
-- **R²:** 0.65
-- **Within €25:** 64%
-- **Within €50:** 85%
+- **MAE:** €29.50 per night
+- **RMSE:** €48.99 per night
+- **R²:** 0.648
+- **Within €25:** 63.4%
+- **Within €50:** 84.4%
+
+Across five repeated random listing splits, its mean MAE was €29.33 ± €0.34. Across five group-based splits with no host overlap, mean MAE increased to €34.40 ± €1.47, showing that prediction for listings from previously unseen hosts is more difficult.
 
 The raw-target Random Forest has slightly better RMSE and R², while the log-target model has better MAE. The final choice therefore reflects the declared priority given to typical absolute euro error rather than universal superiority on every metric.
 
 ### Important limitations
 
-- Some Part 1 and Part 2 preprocessing was performed before the train/test split. The 99th-percentile price threshold, several imputation values, and categorical encoding therefore used information from the full dataset and may introduce a small optimistic bias.
-- The most expensive 1% of listings were removed during cleaning, so the reported performance does not apply to that excluded upper tail.
-- The current text modality measures text quantity, not semantic content.
-- The data comes from one Berlin snapshot, and random splits do not directly test generalization to future market conditions, other cities, or completely unseen hosts.
+- The 99th-percentile price restriction and one-hot category vocabulary were defined in Parts 1 and 2 before splitting. Notebook 3 corrects the main fill-value leakage by reconstructing the relevant missing numeric values and fitting median imputation inside every training split or fold.
+- The model's declared target population excludes listings with missing prices and the removed extreme upper tail.
+- The compact hyperparameter searches and candidate comparison reuse the same training cross-validation folds, so their selection scores can be mildly optimistic. The fixed test set provides the main independent evaluation.
+- The unseen-host analysis is a secondary stress test of the already selected configuration, not a separate independent model-selection benchmark.
+- The current text modality measures text quantity rather than semantic content.
+- The data comes from one Berlin snapshot and cannot establish performance for future market conditions, other cities, or changing platform behavior.
 - The analysis is predictive and does not support causal claims about why a feature is associated with price.
 
 ## Repository Structure
@@ -261,12 +269,13 @@ Main file:
 Responsibilities:
 
 - audit the modeling table and prevent identifier leakage
+- reconstruct originally missing numeric values and fit imputation inside training splits
 - create train/test and cross-validation splits
 - train baselines, linear models, tree ensembles, and a PyTorch MLP
 - tune selected hyperparameters on training data
 - compare raw-price and log-price targets
 - perform spatial and text ablations
-- assess split stability, subgroup errors, feature importance, and bootstrap uncertainty
+- assess random-split stability, unseen-host generalization, subgroup errors, feature importance, and bootstrap uncertainty
 - summarize the final results and limitations
 
 Main files:
@@ -382,11 +391,12 @@ The generated files are:
 ```text
 01_eda.ipynb                 -> data/processed/listings_cleaned.csv
 02_feature_engineering.ipynb -> data/processed/modeling_dataset.csv
+03_modeling.ipynb             -> data/processed/final_results.json
 ```
 
-`03_modeling.ipynb` performs the full model fitting and evaluation. It includes a CPU-compatible PyTorch MLP and repeated experiments, so it takes longer than the first two notebooks. A GPU is not required by the current implementation.
+`03_modeling.ipynb` performs the full model fitting and evaluation. It includes split-aware imputation, a CPU-compatible PyTorch MLP, repeated random splits, unseen-host stress tests, and bootstrap analyses, so it takes considerably longer than the first two notebooks. A GPU is not required by the current implementation.
 
-`04_final_results.ipynb` is a concise reporting notebook based on the results of Notebook 03 and should be updated whenever the modeling workflow or its outputs change.
+`04_final_results.ipynb` is a concise reporting notebook that reads the synchronized result bundle generated by Notebook 03, so its numerical tables do not need to be copied or updated manually.
 
 ## Notes
 
@@ -402,6 +412,7 @@ data/raw/neighbourhoods.csv
 data/raw/neighbourhoods.geojson
 data/processed/listings_cleaned.csv
 data/processed/modeling_dataset.csv
+data/processed/final_results.json
 ```
 
 The compressed raw files should also stay local if used:
