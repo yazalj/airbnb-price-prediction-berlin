@@ -103,7 +103,7 @@ All three files are ignored by Git and can be reproduced by running the notebook
 
 ## Modalities Used
 
-The project evaluates three data modalities.
+The course brief requires at least two data modalities. The project evaluates three: tabular listing attributes, spatial information, and simple quantities derived from listing text.
 
 ### 1. Tabular data
 
@@ -178,13 +178,13 @@ In the latest fully executed `03_modeling.ipynb`, the training-selected final mo
 
 Its fixed holdout performance is:
 
-- **MAE:** €29.50 per night
-- **RMSE:** €48.99 per night
-- **R²:** 0.648
-- **Within €25:** 63.4%
+- **MAE:** €29.59 per night
+- **RMSE:** €49.24 per night
+- **R²:** 0.645
+- **Within €25:** 63.2%
 - **Within €50:** 84.4%
 
-Across five repeated random listing splits, its mean MAE was €29.33 ± €0.34. Across five group-based splits with no host overlap, mean MAE increased to €34.40 ± €1.47, showing that prediction for listings from previously unseen hosts is more difficult.
+Across five repeated random listing splits, its mean MAE was €29.32 ± €0.29. Across five group-based splits with no host overlap, mean MAE increased to €34.45 ± €1.47, showing that prediction for listings from previously unseen hosts is more difficult.
 
 The raw-target Random Forest has slightly better RMSE and R², while the log-target model has better MAE. The final choice therefore reflects the declared priority given to typical absolute euro error rather than universal superiority on every metric.
 
@@ -195,6 +195,7 @@ The raw-target Random Forest has slightly better RMSE and R², while the log-tar
 - The compact hyperparameter searches and candidate comparison reuse the same training cross-validation folds, so their selection scores can be mildly optimistic. The fixed test set provides the main independent evaluation.
 - The unseen-host analysis is a secondary stress test of the already selected configuration, not a separate independent model-selection benchmark.
 - The current text modality measures text quantity rather than semantic content.
+- Original-scale errors are heteroscedastic: residual spread and MAE increase with predicted price, and higher-price listings are systematically underpredicted on average. This does not invalidate Random Forest fitting, but it means expensive-listing point predictions are less precise and should be interpreted cautiously.
 - The data comes from one Berlin snapshot and cannot establish performance for future market conditions, other cities, or changing platform behavior.
 - The analysis is predictive and does not support causal claims about why a feature is associated with price.
 
@@ -310,6 +311,8 @@ The final presentation should briefly communicate:
 - limitations and conclusions
 
 `notebooks/04_final_results.ipynb` is the concise presentation-oriented summary; the complete experiments and diagnostics remain in `notebooks/03_modeling.ipynb`.
+
+A separate slide deck should still be prepared for the required 5–10 minute final presentation. Notebook 04 supplies presentation-ready evidence, but it is not itself the slide deck.
 
 ### 3. Code Repository
 
