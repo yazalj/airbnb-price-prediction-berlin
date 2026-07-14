@@ -17,7 +17,7 @@ The implemented workflow includes:
 
 ## Group Members
 
-| Name | GitHub Username | Notes |
+| Name | GitHub Username | |
 |---|---|---|
 | Yazan Aljerro | yazalj |  |
 | Zeynep Sude Kırlı | zeyneps13 |  |
