@@ -33,6 +33,8 @@ The data comes from [Inside Airbnb](https://insideairbnb.com/get-the-data/), an 
 
 For this project, we use the Berlin dataset. The processed data and the reported notebook results are based on the Berlin snapshot scraped on 23–24 September 2025. Running the workflow with a newer snapshot may produce different row counts, feature distributions, and model results.
 
+To reproduce the reported numbers, use the archived Berlin snapshot from 23–24 September 2025 rather than the current Berlin download. On the Inside Airbnb data page, expand **show archived data** for Berlin and select that snapshot. If it is no longer listed, use the [Inside Airbnb archived-data request form](https://insideairbnb.com/data-requests/). A current snapshot can still be used to rerun the workflow, but its results should be treated as a new experiment rather than compared directly with the values below.
+
 The raw files loaded by `notebooks/01_eda.ipynb` are:
 
 ```text
@@ -428,7 +430,7 @@ data/raw/reviews.csv.gz
 
 Only code, notebooks, documentation, and presentation material should be committed to GitHub.
 
-Because the dependency versions in `requirements.txt` are not pinned, very small numerical differences may occur across Python, NumPy, scikit-learn, or PyTorch versions. The qualitative conclusions should be checked again after any environment or data change.
+The dependency versions in `requirements.txt` are pinned to the environment used for the final validated run. The reference environment uses Python 3.14.0; Notebook 3 also records the Python, NumPy, pandas, scikit-learn, and PyTorch versions in the synchronized result bundle. Revalidate the conclusions after changing the environment or data snapshot.
 
 ## Troubleshooting
 
